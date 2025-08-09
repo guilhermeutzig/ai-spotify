@@ -1,4 +1,4 @@
-.base {
+:is(.primary, .success, .ghost) {
   appearance: none;
   padding: 0.7rem 0.95rem;
   border-radius: 12px;
@@ -13,7 +13,6 @@
 }
 
 .primary {
-  composes: base;
   background: var(--primary);
   color: #071b10;
 }
@@ -23,9 +22,12 @@
 .primary:active {
   transform: translateY(1px);
 }
+.primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 .success {
-  composes: base;
   background: var(--success);
   color: #04150d;
 }
@@ -35,9 +37,12 @@
 .success:active {
   transform: translateY(1px);
 }
+.success:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 
 .ghost {
-  composes: base;
   background: transparent;
   color: var(--text);
   border-color: var(--border);

@@ -6,6 +6,8 @@
   --primary: #1db954; /* Spotify green */
   --primary-700: #169c47;
   --success: #3bb273;
+  --error: #ff5c5c;
+  --info: #4aa3ff;
   --border: #1e222a;
 }
 
@@ -125,4 +127,42 @@
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 0.6rem 0.7rem;
+}
+
+/* Toast */
+.toast {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-left-width: 6px;
+  border-radius: 12px;
+  padding: 0.75rem 0.9rem;
+  max-width: 420px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+.toastSuccess {
+  border-left-color: var(--success);
+}
+.toastError {
+  border-left-color: var(--error);
+}
+.toastInfo {
+  border-left-color: var(--info);
+}
+.toastClose {
+  margin-left: auto;
+  appearance: none;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 8px;
+  padding: 0.1rem 0.4rem;
+  cursor: pointer;
 }

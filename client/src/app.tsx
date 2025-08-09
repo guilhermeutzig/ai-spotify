@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import styles from "./styles/App.module.css";
 import button from "./styles/Button.module.css";
 import { api } from "./lib/api";
@@ -7,15 +7,28 @@ type User = { display_name: string; image_url?: string };
 type SuggestedTrack = { title: string; artist: string };
 
 export function App() {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [user, setUser] = useState<User | null>(null);
-  const [prompt, setPrompt] = useState(
-    "Chill indie vibes for a rainy afternoon"
-  );
+  const [prompt, setPrompt] = useState<string>("");
   const [suggestions, setSuggestions] = useState<SuggestedTrack[]>([]);
-  const [creating, setCreating] = useState(false);
-  const [playlistName, setPlaylistName] = useState("AI Picks");
-  const isAuthed = useMemo(() => !!user, [user]);
+  const [creating, setCreating] = useState<boolean>(false);
+  const [suggesting, setSuggesting] = useState<boolean>(false);
+  const [playlistName, setPlaylistName] = useState<string>("AI Picks");
+  const [toast, setToast] = useState<{
+    type: "error" | "success" | "info";
+    message: string;
+  } | null>(null);
+  const toastTimer = useRef<number | null>(null);
+  const isAuthed = useMemo<boolean>(() => !!user, [user]);
+
+  function showToast(
+    message: string,
+    type: "error" | "success" | "info" = "error"
+  ) {
+    setToast({ message, type });
+    if (toastTimer.current) window.clearTimeout(toastTimer.current);
+    toastTimer.current = window.setTimeout(() => setToast(null), 4000) as any;
+  }
 
   useEffect(() => {
     (async () => {
@@ -43,21 +56,50 @@ export function App() {
   };
 
   const handleSuggest = async () => {
+    if (!prompt.trim()) {
+      showToast("Please enter a prompt.", "error");
+      return;
+    }
+    setSuggesting(true);
     setSuggestions([]);
-    const res = await api.post("/api/ai/suggest", { prompt });
-    setSuggestions(res.tracks || []);
+    try {
+      const res = await api.post("/api/ai/suggest", { prompt });
+      const tracks = (res?.tracks as SuggestedTrack[]) || [];
+      setSuggestions(tracks);
+      if (tracks.length === 0) showToast("No suggestions found.", "info");
+      else
+        showToast(
+          `Generated ${Math.min(tracks.length, 12)} suggestions.`,
+          "success"
+        );
+    } catch (e: any) {
+      showToast(e?.message || "Failed to generate suggestions.", "error");
+    } finally {
+      setSuggesting(false);
+    }
   };
 
   const handleCreatePlaylist = async () => {
+    if (!playlistName.trim()) {
+      showToast("Please enter a playlist name.", "error");
+      return;
+    }
+
+    if (suggestions.length === 0) {
+      showToast("Generate suggestions first.", "error");
+      return;
+    }
+
     setCreating(true);
     try {
       const res = await api.post("/api/spotify/create-playlist", {
         name: playlistName,
         tracks: suggestions,
       });
-      alert("Playlist created! Open in Spotify: " + res.url);
+
+      showToast("Playlist created! Open your playlist in Spotify.", "success");
     } catch (e: any) {
-      alert("Failed to create playlist: " + (e?.message || "Unknown error"));
+      showToast(e?.message || "Failed to create playlist.", "error");
     } finally {
       setCreating(false);
     }
@@ -92,6 +134,26 @@ export function App() {
 
   return (
     <div class={styles.container}>
+      {toast && (
+        <div
+          class={`${styles.toast} ${
+            toast.type === "error"
+              ? styles.toastError
+              : toast.type === "success"
+              ? styles.toastSuccess
+              : styles.toastInfo
+          }`}
+        >
+          <span>{toast.message}</span>
+          <button
+            class={styles.toastClose}
+            onClick={() => setToast(null)}
+            aria-label="Close"
+          >
+            ×
+          </button>
+        </div>
+      )}
       <header class={styles.header}>
         <div class={styles.user}>
           {user?.image_url && (
@@ -118,8 +180,12 @@ export function App() {
             onInput={(e: any) => setPrompt(e.currentTarget.value)}
             placeholder="e.g., upbeat pop for a morning run"
           />
-          <button class={button.primary} onClick={handleSuggest}>
-            Generate suggestions
+          <button
+            class={button.primary}
+            onClick={handleSuggest}
+            disabled={suggesting}
+          >
+            {suggesting ? "Generating…" : "Generate suggestions"}
           </button>
         </section>
 

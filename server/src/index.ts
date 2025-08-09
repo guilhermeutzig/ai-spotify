@@ -9,7 +9,7 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3001;
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://localhost:5173";
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || "http://127.0.0.1:5173";
 const COOKIE_SECRET = process.env.COOKIE_SECRET || "dev-secret";
 
 app.use(cors({ origin: CLIENT_ORIGIN, credentials: true }));
@@ -39,7 +39,7 @@ function now(): number {
 const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID || "";
 const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET || "";
 const SPOTIFY_REDIRECT_URI =
-  process.env.SPOTIFY_REDIRECT_URI || "http://localhost:3001/api/auth/callback";
+  process.env.SPOTIFY_REDIRECT_URI || "http://127.0.0.1:3001/api/auth/callback";
 const SPOTIFY_SCOPES = [
   "playlist-modify-private",
   "playlist-modify-public",

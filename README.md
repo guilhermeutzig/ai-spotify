@@ -36,9 +36,11 @@ COOKIE_SECRET=change-me
 
 SPOTIFY_CLIENT_ID=your_client_id
 SPOTIFY_CLIENT_SECRET=your_client_secret
-SPOTIFY_REDIRECT_URI=http://localhost:3001/api/auth/callback
+SPOTIFY_REDIRECT_URI=http://127.0.0.1:3001/api/auth/callback
 
-OLLAMA_BASE_URL=http://localhost:11434
+CLIENT_ORIGIN=http://127.0.0.1:5173
+
+OLLAMA_BASE_URL=http://127.0.0.1:11434
 OLLAMA_MODEL=llama3.1:8b
 ```
 
