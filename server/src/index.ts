@@ -51,10 +51,9 @@ if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
   console.warn("Warning: Missing SPOTIFY_CLIENT_ID or SPOTIFY_CLIENT_SECRET");
 }
 
-// Groq AI
-import Groq from "groq-sdk";
-const groqApiKey = process.env.GROQ_API_KEY || "";
-const groq = groqApiKey ? new Groq({ apiKey: groqApiKey }) : null;
+// Local LLM via Ollama
+const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://localhost:11434";
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || "llama3.1:8b";
 
 // Auth routes
 app.get("/api/auth/login", (req: Request, res: Response) => {
@@ -168,28 +167,46 @@ app.get("/api/session", async (req, res) => {
 
 // AI suggestions
 app.post("/api/ai/suggest", async (req, res) => {
-  if (!groq)
-    return res.status(400).json({ error: "GROQ_API_KEY not configured" });
   const { prompt } = req.body as { prompt?: string };
   if (!prompt) return res.status(400).json({ error: "Missing prompt" });
   try {
     const system = `You are a music curator. Given a prompt, return a concise JSON with an array called tracks. Each track must have title and artist. Return ONLY JSON.`;
     const user = `Prompt: ${prompt}\nReturn 12 tracks.`;
-    const chat = await groq.chat.completions.create({
-      model: "llama-3.1-8b-instant",
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-      temperature: 0.6,
-      max_tokens: 600,
+
+    const ollamaRes = await fetch(`${OLLAMA_BASE_URL}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: OLLAMA_MODEL,
+        stream: false,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user },
+        ],
+        options: { temperature: 0.6 },
+      }),
     });
-    const content = chat.choices?.[0]?.message?.content || "";
+    if (!ollamaRes.ok) {
+      const t = await ollamaRes.text();
+      throw new Error(`Ollama request failed: ${t}`);
+    }
+    const data = (await ollamaRes.json()) as {
+      message?: { content?: string };
+    };
+    const content = data?.message?.content || "";
     const json = safeExtractJson(content);
     if (!json?.tracks) throw new Error("Invalid AI response");
     res.json({ tracks: json.tracks.slice(0, 20) });
   } catch (e: any) {
-    res.status(500).json({ error: e?.message || "AI error" });
+    const msg = e?.message || "AI error";
+    // Provide a friendlier hint if Ollama server is not reachable
+    if (msg.includes("ECONNREFUSED") || msg.includes("fetch failed")) {
+      return res.status(500).json({
+        error:
+          "Cannot reach Ollama at OLLAMA_BASE_URL. Is Ollama running? Try: `ollama serve` and `ollama pull llama3.1:8b`.",
+      });
+    }
+    res.status(500).json({ error: msg });
   }
 });
 

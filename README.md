@@ -1,6 +1,6 @@
 ## AI Spotify – Prompt to Playlist (Preact + TypeScript)
 
-Simple, fast app to connect your Spotify account and generate playlist suggestions from a natural language prompt using Groq's free-tier friendly models. Clean UI with Preact, Vite, and CSS modules.
+Simple, fast app to connect your Spotify account and generate playlist suggestions from a natural language prompt. Uses a local Ollama model by default. Clean UI with Preact, Vite, and CSS modules.
 
 ### Features
 
@@ -12,7 +12,7 @@ Simple, fast app to connect your Spotify account and generate playlist suggestio
 
 - Preact + TypeScript + Vite (frontend)
 - Express + TypeScript (backend)
-- Groq SDK (AI suggestions)
+- Ollama local LLM (AI suggestions)
 
 ### 1) Spotify setup
 
@@ -20,9 +20,10 @@ Simple, fast app to connect your Spotify account and generate playlist suggestio
 2. Add Redirect URI: `http://localhost:3001/api/auth/callback`
 3. Copy `Client ID` and `Client Secret`.
 
-### 2) Groq (AI) setup
+### 2) Ollama (AI) setup
 
-- Create an account at Groq and generate an API key. They offer a free developer tier suitable for testing.
+- Install Ollama (`brew install ollama`), then start the server: `ollama serve`
+- Pull a model (recommended): `ollama pull llama3.1:8b`
 
 ### 3) Configure env
 
@@ -37,7 +38,8 @@ SPOTIFY_CLIENT_ID=your_client_id
 SPOTIFY_CLIENT_SECRET=your_client_secret
 SPOTIFY_REDIRECT_URI=http://localhost:3001/api/auth/callback
 
-GROQ_API_KEY=your_groq_key
+OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_MODEL=llama3.1:8b
 ```
 
 ### 4) Install and run
